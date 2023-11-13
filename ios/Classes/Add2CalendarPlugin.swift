@@ -77,12 +77,39 @@ public class Add2CalendarPlugin: NSObject, FlutterPlugin {
         if let recurrence = args["recurrence"] as? [String:Any]{
             let interval = recurrence["interval"] as! Int
             let frequency = recurrence["frequency"] as! Int
+            let days = recurrence["days"] as? [String] // Must be an array like ["monday", "tuesday", "wednesday", ...] (lowercase, full weekday names)
             let end = recurrence["endDate"] as? Double// Date(milliseconds: (args["startDate"] as! Double))
             let ocurrences = recurrence["ocurrences"] as? Int
+            
+            var daysOfTheWeek = days?.map {
+                (dayOfWeek: String) -> EKRecurrenceDayOfWeek in
+                switch dayOfWeek {
+                case "monday":
+                    return try! EKRecurrenceDayOfWeek.init(EKWeekday.monday)
+                case "tuesday":
+                    return try! EKRecurrenceDayOfWeek.init(EKWeekday.tuesday)
+                case "wednesday":
+                    return try! EKRecurrenceDayOfWeek.init(EKWeekday.wednesday)
+                case "thursday":
+                    return try! EKRecurrenceDayOfWeek.init(EKWeekday.thursday)
+                case "friday":
+                    return try! EKRecurrenceDayOfWeek.init(EKWeekday.friday)
+                case "saturday":
+                    return try! EKRecurrenceDayOfWeek.init(EKWeekday.saturday)
+                default:
+                    return try! EKRecurrenceDayOfWeek.init(EKWeekday.sunday)
+                }
+            }
             
             let recurrenceRule = EKRecurrenceRule.init(
                 recurrenceWith: EKRecurrenceFrequency(rawValue: frequency)!,
                 interval: interval,
+                daysOfTheWeek: daysOfTheWeek,
+                daysOfTheMonth: nil,
+                monthsOfTheYear: nil,
+                weeksOfTheYear: nil,
+                daysOfTheYear: nil,
+                setPositions: nil,
                 end: ocurrences != nil ? EKRecurrenceEnd.init(occurrenceCount: ocurrences!) : end != nil ? EKRecurrenceEnd.init(end: Date(milliseconds: end!)) : nil
             )
             event.recurrenceRules = [recurrenceRule]
